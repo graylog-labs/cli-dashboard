@@ -19,7 +19,7 @@
       "url": "https://github.com/Graylog2/cli-dashboard/blob/master/COPYING"
     }
   ],
-  "version": "0.11.0",
+  "version": "0.12.0",
   "dependencies": {
     "blessed": "0.0.37",
     "blessed-contrib": "0.0.3",
