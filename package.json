@@ -19,7 +19,7 @@
       "url": "https://github.com/Graylog2/cli-dashboard/blob/master/COPYING"
     }
   ],
-  "version": "0.10.0",
+  "version": "0.11.0",
   "dependencies": {
     "moment": "~2.9.0",
     "request": "~2.51.0",
@@ -28,6 +28,6 @@
   },
   "preferGlobal": "true",
   "bin": {
-    "graylog-dashboard" : "graylog-dashboard.js"
+    "graylog-dashboard": "graylog-dashboard.js"
   }
 }
