@@ -31,8 +31,8 @@ NPM in the first place but the output of `npm install` should show you where it 
 
 ## The dashboard in the wild.
 
-Because this stuff looks like it is from space we suspect that people like to show it. Send us a photo of your dashboard running somewhere
-and we are more than happy to publish it here. *Bonus points for messy desks or interesting stuff in the background.*
+Because this stuff looks like it is from space we suspect that people like to show it. **Send us a photo of your dashboard running somewhere**
+and we are more than happy to publish it here. **Bonus points for messy desks or interesting stuff in the background.**
 
 ## Working with NPM
 
