@@ -39,6 +39,8 @@ var handlers = require("./lib/handlers.js")
  *
  */
 
+ ui.grid("topRight").get(1, 0).content = "{center}{green-fg}Not implemented yet!{/green-fg}{/center}"
+
 setInterval(function() {
   graylog.lastMessagesOfStream({
     serverUrl: "http://localhost:12900",
