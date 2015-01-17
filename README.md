@@ -14,11 +14,11 @@ by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 Easy.
 
     $ npm install graylog-cli-dashboard -g
-    $ graylog-dashboard -s [stream-id] -h [graylog-server REST API URL]
+    $ graylog-dashboard --stream-id [stream-id] --host [graylog-server REST API URL]
 
 Full example:
 
-    $ graylog-dashboard -s 549d7f9fbee84e568d181655 -h http://graylog.example.org:12900
+    $ graylog-dashboard --stream-id 549d7f9fbee84e568d181655 --host http://graylog.example.org:12900
 
 #### If the graylog-dashboard executable cannot be found
 
