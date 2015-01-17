@@ -1,84 +1,41 @@
-var moment = require('moment')
+/**
+ * This file is part of Graylog2.
+ *
+ * Graylog2 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Graylog2 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 var graylog = require("./lib/graylog-api.js")
 var ui = require("./lib/screen.js")
+var handlers = require("./lib/handlers.js")
 
-
-/****************************************/
-
-/**** GRID SETUP ****/
-
-
-
-/**** HANDLERS ****/
-
-function updateMessagesList(messages) {
-  var log = ui.grid("bottom").get(0, 0)
-
-  for(var i in messages) {
-    var message = messages[i];
-    log.log(message.timestamp + " - " + message.message)
-  }
-
-  ui.render()
-}
-
-function updateStreamThroughput(throughput) {
-  var box = ui.grid("bottom").get(0, 0)
-  box.setLabel("Messages (Throughput: " + throughput.toString() + "/sec)")
-
-  // Also update stream throughput chart.
-  updateStreamThroughputLine(throughput)
-}
-
-var streamThroughputData = [ ]
-function updateStreamThroughputLine(throughput) {
-  var throughputLine = ui.grid("top").get(0, 0)
-
-  // Manage local data array.
-  if(streamThroughputData.length >= 300) {
-    streamThroughputData.shift()
-  }
-  streamThroughputData.push({x: moment().format("HH:mm"), y: throughput})
-
-  var x = []
-  var y = []
-  for(var i in streamThroughputData) {
-    x.push(streamThroughputData[i].x)
-    y.push(streamThroughputData[i].y)
-  }
-
-  throughputLine.setData(x, y)
-  ui.render()
-}
-
-var totalThroughputData = [ ]
-function updateTotalThroughputLine(throughput) {
-  var throughputLine = ui.grid("topRight").get(0, 0)
-
-  // Manage local data array.
-  if(totalThroughputData.length >= 300) {
-    totalThroughputData.shift()
-  }
-  totalThroughputData.push({x: moment().format("HH:mm"), y: throughput})
-
-  var x = []
-  var y = []
-  for(var i in totalThroughputData) {
-    x.push(totalThroughputData[i].x)
-    y.push(totalThroughputData[i].y)
-  }
-
-  throughputLine.setData(x, y)
-  ui.render()
-}
-
-function markAlertsAsEmpty() {
-  var alerts = ui.grid("topRight").get(1, 0)
-  alerts.content = "{center}{green-fg}No active alerts for this stream!{/green-fg}{/center}"
-}
-
-/**** UPDATING DATA ****/
+/*
+ *
+ *   ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈    ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈    ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈
+ *   ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈    ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈    ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈
+ *   ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈    ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈    ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈
+ *   ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈
+ *   ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈
+ *
+ *   I have no clue about JavaScript or even node.js and this is 
+ *   going to be pretty terrible code. It is a wonder that I got
+ *   it running at all lol.
+ *
+ *   I wish this was Java.
+ *
+ *   Have fun in here! (Lennart, 01/2015)
+ *
+ */
 
 setInterval(function() {
   graylog.lastMessagesOfStream({
@@ -86,7 +43,7 @@ setInterval(function() {
     streamId: "549d7f9fbee84e568d181655",
     username: "lennart",
     password: "123123123"
-  }, updateMessagesList)
+  }, handlers.updateMessagesList)
 }, 1000)
 
 setInterval(function() {
@@ -95,7 +52,7 @@ setInterval(function() {
     streamId: "549d7f9fbee84e568d181655",
     username: "lennart",
     password: "123123123"
-  }, updateStreamThroughput)
+  }, handlers.updateStreamThroughput)
 }, 1000)
 
 setInterval(function() {
@@ -103,7 +60,5 @@ setInterval(function() {
     serverUrl: "http://localhost:12900",
     username: "lennart",
     password: "123123123"
-  }, updateTotalThroughputLine)
+  }, handlers.updateTotalThroughputLine)
 }, 1000)
-
-ui.render()
