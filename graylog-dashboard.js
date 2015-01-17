@@ -17,15 +17,14 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var fs = require('fs')
+var yaml = require('js-yaml')
 var argv = require('yargs')
     .usage('Usage: graylog-dashboard --stream-id [stream-id] --host [graylog-server REST API URL]')
     .demand(['s','h'])
     .alias('s', 'stream-id')
     .alias('h', 'host')
     .argv
-
-var streamId = argv.s
-var serverUrl = argv.h
 
 var graylog = require("./lib/graylog-api.js")
 var ui = require("./lib/screen.js")
@@ -49,17 +48,45 @@ var handlers = require("./lib/handlers.js")
  *
  */
 
- // Command line arguments parsing.
+// CLI arguments
+var streamId = argv.s
+var serverUrl = argv.h
 
+// Make sure serverUrl has a trailing slash. (computers.)
+var lastChar = serverUrl.substr(-1);
+if (lastChar != '/') {
+  serverUrl = serverUrl + '/'; 
+}
 
- ui.grid("topRight").get(1, 0).content = "{center}{green-fg}Not implemented yet!{/green-fg}{/center}"
+// Read user credentials.
+var credFilePath = process.env['HOME'] + "/.graylog_dashboard"
+try {
+  var config = yaml.safeLoad(fs.readFileSync(credFilePath, 'utf8'))
+} catch (err) {
+  throw new Error("Could not read Graylog user credentials file at " + credFilePath + " - Please create it " 
+                + "as described in the README. (" + err + ")")
+}
+
+// Check config.
+if(config.username == undefined) {
+  throw new Error("No username defined in " + credFilePath)
+}
+
+if(config.password == undefined) {
+  throw new Error("No password defined in " + credFilePath)
+}
+
+ui.grid("topRight").get(1, 0).content = "{center}{green-fg}Not implemented yet!{/green-fg}{/center}"
+
+var apiUser = config.username.toString()
+var apiPass = config.password.toString()
 
 setInterval(function() {
   graylog.lastMessagesOfStream({
     serverUrl: serverUrl,
     streamId: streamId,
-    username: "lennart",
-    password: "123123123"
+    username: apiUser,
+    password: apiPass
   }, handlers.updateMessagesList)
 }, 1000)
 
@@ -67,15 +94,15 @@ setInterval(function() {
   graylog.streamThroughput({
     serverUrl: serverUrl,
     streamId: streamId,
-    username: "lennart",
-    password: "123123123"
+    username: apiUser,
+    password: apiPass
   }, handlers.updateStreamThroughput)
 }, 1000)
 
 setInterval(function() {
   graylog.totalThroughput({
     serverUrl: serverUrl,
-    username: "lennart",
-    password: "123123123"
+    username: apiUser,
+    password: apiPass
   }, handlers.updateTotalThroughputLine)
 }, 1000)

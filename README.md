@@ -9,9 +9,16 @@ your platform.
 The most important library we use is [blessed-contrib](https://github.com/yaronn/blessed-contrib)
 by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 
+The dashboard should run under Linux and OSX. Please report any issues in the [issue tracker](https://github.com/Graylog2/cli-dashboard/issues).
+
 ## Installation
 
-Easy.
+Easy. First create a configuration file in `~/.graylog_dashboard` that contains your Graylog username and password:
+
+    username: lennart
+    password: sEcReT
+
+That's it. Now start the dashboard:
 
     $ npm install graylog-cli-dashboard -g
     $ graylog-dashboard --stream-id [stream-id] --host [graylog-server REST API URL]
@@ -19,6 +26,8 @@ Easy.
 Full example:
 
     $ graylog-dashboard --stream-id 549d7f9fbee84e568d181655 --host http://graylog.example.org:12900
+
+Make sure to run this with a recent version of node.js. (Tested and developed with node 0.10.35 on OSX Yosemite)
 
 #### If the graylog-dashboard executable cannot be found
 
