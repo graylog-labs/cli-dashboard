@@ -1,0 +1,1 @@
+## The Graylog CLI dashboard
