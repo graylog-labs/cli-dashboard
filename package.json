@@ -1,0 +1,10 @@
+{
+  "name": "graylog-cli-dashboard",
+  "version": "0.10.0",
+  "dependencies": {
+    "moment": "~2.9.0",
+    "request": "~2.51.0",
+    "blessed-contrib": "0.0.3",
+    "blessed": "0.0.37"
+  }
+}
