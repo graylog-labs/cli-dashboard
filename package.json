@@ -22,7 +22,7 @@
   "version": "0.12.1",
   "dependencies": {
     "blessed": "0.0.37",
-    "blessed-contrib": "0.0.3",
+    "blessed-contrib": "0.0.8",
     "js-yaml": "^3.2.5",
     "moment": "~2.9.0",
     "request": "~2.51.0",
