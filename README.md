@@ -13,7 +13,7 @@ by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 
 ## Installation
 
-Easy. First create a configuration file in `~/.graylog_dashboard` that contains your Graylog username and password:
+Easy. First create a configuration file at `~/.graylog_dashboard` that contains your Graylog username and password:
 
     username: lennart
     password: sEcReT
