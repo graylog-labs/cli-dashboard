@@ -38,7 +38,7 @@ var handlers = require("./lib/handlers.js")
  *   ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈
  *   ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈
  *
- *   I have no clue about JavaScript or even node.js and this is 
+ *   I have no clue about JavaScript or even node.js and this is
  *   going to be pretty terrible code. It is a wonder that I got
  *   it running at all lol.
  *
@@ -55,7 +55,7 @@ var serverUrl = argv.h
 // Make sure serverUrl has a trailing slash. (computers.)
 var lastChar = serverUrl.substr(-1);
 if (lastChar != '/') {
-  serverUrl = serverUrl + '/'; 
+  serverUrl = serverUrl + '/';
 }
 
 // Read user credentials.
@@ -63,7 +63,7 @@ var credFilePath = process.env['HOME'] + "/.graylog_dashboard"
 try {
   var config = yaml.safeLoad(fs.readFileSync(credFilePath, 'utf8'))
 } catch (err) {
-  throw new Error("Could not read Graylog user credentials file at " + credFilePath + " - Please create it " 
+  throw new Error("Could not read Graylog user credentials file at " + credFilePath + " - Please create it "
                 + "as described in the README. (" + err + ")")
 }
 
@@ -75,8 +75,6 @@ if(config.username == undefined) {
 if(config.password == undefined) {
   throw new Error("No password defined in " + credFilePath)
 }
-
-ui.grid("topRight").get(1, 0).content = "{center}{green-fg}Not implemented yet!{/green-fg}{/center}"
 
 var apiUser = config.username.toString()
 var apiPass = config.password.toString()
@@ -105,4 +103,13 @@ setInterval(function() {
     username: apiUser,
     password: apiPass
   }, handlers.updateTotalThroughputLine)
+}, 1000)
+
+setInterval(function() {
+  graylog.streamAlerts({
+    serverUrl: serverUrl,
+    streamId: streamId,
+    username: apiUser,
+    password: apiPass
+  }, handlers.renderAlerts)
 }, 1000)
