@@ -4,7 +4,7 @@ This is a [Graylog](http://www.graylog.org/) stream dashboard that runs in your 
 when performing a release on the main monitor and having the dashboard on the second monitor to keep an eye on errors and exceptions on
 your platform.
 
-![screencast](screencast.gif)
+![screencast](https://github.com/Graylog2/cli-dashboard/blob/master/screencast.gif)
 
 The most important library we use is [blessed-contrib](https://github.com/yaronn/blessed-contrib)
 by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
