@@ -1,5 +1,15 @@
 # The Graylog CLI dashboard
 
+--
+
+## DEPRECATION NOTICE
+
+This project is deprecated and not maintained by Graylog anymore.
+
+If you're interested in taking over maintenance of this project, please open [an issue](https://github.com/Graylog2/cli-dashboard/issues) or drop us an email at hello@graylog.com.
+
+--
+
 This is a [Graylog](http://www.graylog.org/) stream dashboard that runs in your shell. It is meant to be a perfect companion for example
 when performing a release on the main monitor and having the dashboard on the second monitor to keep an eye on errors and exceptions on
 your platform.
