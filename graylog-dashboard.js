@@ -46,6 +46,10 @@ try {
   // Ignore, maybe everything was defined in argv
 }
 
+// Remove falsy values from argv to clean up merge.
+Object.keys(argv).forEach((k) => {
+  if (!argv[k]) delete argv[k];
+});
 // Merge argv & file config.
 const config = Object.assign({}, fileConfig, argv);
 
@@ -61,6 +65,10 @@ const config = Object.assign({}, fileConfig, argv);
 // eslint-disable-next-line prefer-const
 let {username, password, 'stream-id': streamID, host: serverURL, 'poll-interval': pollInterval} = config;
 
+// Make sure we have a protocol (default: https)
+if (serverURL.slice(0, 4) !== 'http') serverURL = 'https://' + serverURL;
+// Make sure we have a port (default REST API port is 12900)
+if (!/:\d+$/.test(serverURL)) serverURL += ':12900';
 // Make sure serverURL has a trailing slash. (computers.)
 if (serverURL[serverURL.length - 1] !== '/') serverURL += '/';
 
