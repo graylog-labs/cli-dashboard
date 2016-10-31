@@ -1,15 +1,5 @@
 # The Graylog CLI dashboard
 
---
-
-## DEPRECATION NOTICE
-
-This project is deprecated and not maintained by Graylog anymore.
-
-If you're interested in taking over maintenance of this project, please open [an issue](https://github.com/Graylog2/cli-dashboard/issues) or drop us an email at hello@graylog.com.
-
---
-
 This is a [Graylog](http://www.graylog.org/) stream dashboard that runs in your shell. It is meant to be a perfect companion for example
 when performing a release on the main monitor and having the dashboard on the second monitor to keep an eye on errors and exceptions on
 your platform.
@@ -23,22 +13,44 @@ by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 
 ## Installation
 
-Easy. First create a configuration file at `~/.graylog_dashboard` that contains your Graylog username and password:
-
-    username: lennart
-    password: sEcReT
-
-That's it. Now install start the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) installed.
+Install the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) installed.
 Protip: It's in [homebrew](http://brew.sh) if you are on OSX.)
 
     $ npm install graylog-cli-dashboard -g
-    $ graylog-dashboard --stream-id [stream-id] --host [graylog-server REST API URL]
+
+View the options:
+
+    $ graylog-cli-dashboard --help
+    Usage: graylog-dashboard.js <command> [options]
+
+    Options:
+      --stream-id       Graylog Stream ID
+      --host            Full Graylog REST API URL
+      --poll-interval   How often (in ms) to poll the Graylog server [default: 1000]
+      --username        Graylog username
+      --password        Graylog password
+      --cred-file-path  Path to an optional credentials file
+                                   [default: "/Users/user/.graylog_dashboard"]
+      --help            Show help                                          [boolean]
 
 Full example:
 
     $ graylog-dashboard --stream-id 549d7f9fbee84e568d181655 --host http://graylog.example.org:12900
 
-Make sure to run this with a recent version of node.js. (Tested and developed with node 0.10.35 on OSX Yosemite)
+Make sure to run this with a recent version (>= 4) of node.js.
+
+#### Credentials File
+
+If you wish, you may place a YAML file containing any of the above options at a path of your choosing.
+The default is `~/.graylog_dashboard`. For example:
+
+    username: lennart
+    password: sEcReT
+
+#### Specifying a Stream
+
+A stream ID is no longer required on startup. You can specify one if you like, or choose one from the list
+on the right side of the screen.
 
 #### If the graylog-dashboard executable cannot be found
 
@@ -49,7 +61,7 @@ NPM in the first place but the output of `npm install` should show you where it 
     # In this OSX example graylog-dashboard has been linked to the graylog-dashboard.js file in /usr/local/share/npm/...
     # Execute /usr/local/share/npm/bin/graylog-dashboard to try it out
 
-## The dashboard in the wild.
+## The Dashboard in the Wild
 
 Because this stuff looks like it is from space we suspect that people like to show it. **Send us a photo of your dashboard running somewhere**
 and we are more than happy to publish it here. **Bonus points for messy desks or interesting stuff in the background.**
