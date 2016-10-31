@@ -26,7 +26,6 @@
     "bluebird": "^3.4.6",
     "js-yaml": "^3.2.5",
     "moment": "^2.9.0",
-    "@timothygu/terminal-menu" : "^2.1.2",
     "request": "^2.76.0",
     "yargs": "^6.3.0"
   },

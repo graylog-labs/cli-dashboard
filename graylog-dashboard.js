@@ -31,7 +31,6 @@ const Promise = require('bluebird');
 const graylog = require('./lib/graylog-api');
 const ui = require('./lib/screen');
 const handlers = require('./lib/handlers');
-const makeStreamMenu = require('./lib/menu');
 
 // CLI arguments
 let serverURL = argv.h;
@@ -56,27 +55,38 @@ try {
 
 const {username, password, poll_interval = 1000} = config;
 
-// Ask the user for a stream ID if one is not specified.
-function getStreamID() {
-  if (argv.s) return Promise.resolve(argv.s);
-  console.log('No stream selected, looking up available streams...');
-  // Resolves to a stream ID
-  return makeStreamMenu({username, password, serverURL});
+let streamID = argv.s; // may be null
+let streams; // filled in after streams runs
+
+function storeStreams(_streams) {
+  streams = _streams;
+  if (!streamID) streamID = streams[0].id;
+  ui.flush(streams.find((s) => s.id === streamID).title);
 }
 
-function poll(streamID) {
+function onStreamChange(blessedEl) {
+  const streamTitle = blessedEl.content;
+  streamID = streams.find((s) => s.title === streamTitle).id;
+  ui.flush(streamTitle);
+}
+
+function poll() {
   return Promise.all([
     graylog.lastMessagesOfStream({serverURL, streamID, username, password}).then(handlers.updateMessagesList),
     graylog.streamThroughput({serverURL, streamID, username, password}).then(handlers.updateStreamThroughput),
     graylog.totalThroughput({serverURL, username, password}).then(handlers.updateTotalThroughputLine),
     graylog.streamAlerts({serverURL, streamID, username, password}).then(handlers.renderAlerts),
   ])
+  .then(() => ui.render()) // batch up renders
   .delay(poll_interval)
   .then(() => poll(streamID));
 }
 
 // Entry
-getStreamID()
-.tap(() => ui.create()) // tap as not to swallow streamID
+ui.create({onStreamChange});
+// Get streams first
+graylog.streams({serverURL, username, password})
+.tap(storeStreams)
+.then(handlers.updateStreamsList)
 .then(poll)
-.catch((e) => { console.error(e); });
+.catch((e) => { ui.screen.destroy(); console.error(e); process.exit(1); });
