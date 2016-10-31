@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 
 /**
  * This file is part of Graylog2.
@@ -17,99 +18,65 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var fs = require('fs')
-var yaml = require('js-yaml')
-var argv = require('yargs')
+const fs = require('fs');
+const yaml = require('js-yaml');
+const argv = require('yargs')
     .usage('Usage: graylog-dashboard --stream-id [stream-id] --host [graylog-server REST API URL]')
-    .demand(['s','h'])
+    .demand(['h'])
     .alias('s', 'stream-id')
     .alias('h', 'host')
-    .argv
+    .argv;
 
-var graylog = require("./lib/graylog-api.js")
-var ui = require("./lib/screen.js")
-var handlers = require("./lib/handlers.js")
-
-/*
- *
- *   ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈    ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈    ┈╱╱▏┈┈╱╱╱╱▏╱╱▏┈┈┈
- *   ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈    ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈    ┈▇╱▏┈┈▇▇▇╱▏▇╱▏┈┈┈
- *   ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈    ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈    ┈▇╱▏▁┈▇╱▇╱▏▇╱▏▁┈┈
- *   ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈    ┈▇╱╱╱▏▇╱▇╱▏▇╱╱╱▏┈
- *   ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈    ┈▇▇▇╱┈▇▇▇╱┈▇▇▇╱┈┈
- *
- *   I have no clue about JavaScript or even node.js and this is
- *   going to be pretty terrible code. It is a wonder that I got
- *   it running at all lol.
- *
- *   I wish this was Java.
- *
- *   Have fun in here! (Lennart, 01/2015)
- *
- */
+const Promise = require('bluebird');
+const graylog = require('./lib/graylog-api');
+const ui = require('./lib/screen');
+const handlers = require('./lib/handlers');
+const makeStreamMenu = require('./lib/menu');
 
 // CLI arguments
-var streamId = argv.s
-var serverUrl = argv.h
+let serverURL = argv.h;
 
-// Make sure serverUrl has a trailing slash. (computers.)
-var lastChar = serverUrl.substr(-1);
-if (lastChar != '/') {
-  serverUrl = serverUrl + '/';
-}
+// Make sure serverURL has a trailing slash. (computers.)
+if (serverURL[serverURL.length - 1] !== '/') serverURL += '/';
 
 // Read user credentials.
-var credFilePath = process.env['HOME'] + "/.graylog_dashboard"
+const credFilePath = process.env['HOME'] + "/.graylog_dashboard";
+let config;
 try {
-  var config = yaml.safeLoad(fs.readFileSync(credFilePath, 'utf8'))
+  config = yaml.safeLoad(fs.readFileSync(credFilePath, 'utf8'));
 } catch (err) {
-  throw new Error("Could not read Graylog user credentials file at " + credFilePath + " - Please create it "
-                + "as described in the README. (" + err + ")")
+  throw new Error(`Could not read Graylog user credentials file at ${credFilePath} - Please create it ` +
+                  `as described in the README. (${err.message})`);
 }
 
 // Check config.
-if(config.username == undefined) {
-  throw new Error("No username defined in " + credFilePath)
+['username', 'password'].forEach((k) => {
+  if (!config[k]) throw new Error(`No ${k} defined in ${credFilePath}.`);
+});
+
+const {username, password, poll_interval = 1000} = config;
+
+// Ask the user for a stream ID if one is not specified.
+function getStreamID() {
+  if (argv.s) return Promise.resolve(argv.s);
+  console.log('No stream selected, looking up available streams...');
+  // Resolves to a stream ID
+  return makeStreamMenu({username, password, serverURL});
 }
 
-if(config.password == undefined) {
-  throw new Error("No password defined in " + credFilePath)
+function poll(streamID) {
+  return Promise.all([
+    graylog.lastMessagesOfStream({serverURL, streamID, username, password}).then(handlers.updateMessagesList),
+    graylog.streamThroughput({serverURL, streamID, username, password}).then(handlers.updateStreamThroughput),
+    graylog.totalThroughput({serverURL, username, password}).then(handlers.updateTotalThroughputLine),
+    graylog.streamAlerts({serverURL, streamID, username, password}).then(handlers.renderAlerts),
+  ])
+  .delay(poll_interval)
+  .then(() => poll(streamID));
 }
 
-var apiUser = config.username.toString()
-var apiPass = config.password.toString()
-
-setInterval(function() {
-  graylog.lastMessagesOfStream({
-    serverUrl: serverUrl,
-    streamId: streamId,
-    username: apiUser,
-    password: apiPass
-  }, handlers.updateMessagesList)
-}, 1000)
-
-setInterval(function() {
-  graylog.streamThroughput({
-    serverUrl: serverUrl,
-    streamId: streamId,
-    username: apiUser,
-    password: apiPass
-  }, handlers.updateStreamThroughput)
-}, 1000)
-
-setInterval(function() {
-  graylog.totalThroughput({
-    serverUrl: serverUrl,
-    username: apiUser,
-    password: apiPass
-  }, handlers.updateTotalThroughputLine)
-}, 1000)
-
-setInterval(function() {
-  graylog.streamAlerts({
-    serverUrl: serverUrl,
-    streamId: streamId,
-    username: apiUser,
-    password: apiPass
-  }, handlers.renderAlerts)
-}, 1000)
+// Entry
+getStreamID()
+.tap(() => ui.create()) // tap as not to swallow streamID
+.then(poll)
+.catch((e) => { console.error(e); });
