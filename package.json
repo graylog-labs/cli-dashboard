@@ -1,5 +1,6 @@
 {
   "name": "graylog-cli-dashboard",
+  "version": "0.14.0",
   "description": "CLI dashboard for Graylog because ain't nobody got time for browser windows.",
   "homepage": "http://www.graylog.org/",
   "author": {
@@ -22,7 +23,6 @@
       "url": "https://github.com/Graylog2/cli-dashboard/blob/master/COPYING"
     }
   ],
-  "version": "0.14.0",
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.5.5",
@@ -38,6 +38,7 @@
     "graylog-dashboard": "graylog-dashboard.js"
   },
   "devDependencies": {
-    "eslint": "^3.9.0"
+    "eslint": "^3.9.0",
+    "semver": "^5.3.0"
   }
 }

@@ -19,7 +19,7 @@ define release
 	VERSION=`node -pe "require('./package.json').version"` && \
 	NEXT_VERSION=`node -pe "require('semver').inc(\"$$VERSION\", '$(1)')"` && \
 	node -e "\
-		['./package.json', './bower.json'].forEach(function(fileName) {\
+		['./package.json'].forEach(function(fileName) {\
 			var j = require(fileName);\
 			j.version = \"$$NEXT_VERSION\";\
 			var s = JSON.stringify(j, null, 2);\
