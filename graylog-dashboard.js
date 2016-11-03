@@ -98,14 +98,14 @@ function storeStreams(_streams) {
   }
   const thisStream = streams.find((s) => s.title === config.streamTitle);
   config.streamID = thisStream.id;
-  ui.flush(thisStream.title);
+  ui.flush(thisStream.title, streams);
 }
 
 function onStreamChange(blessedEl) {
   const streamTitle = blessedEl.content;
   config.streamTitle = streamTitle;
   config.streamID = streams.find((s) => s.title === streamTitle).id;
-  ui.flush(streamTitle);
+  ui.flush(streamTitle, streams);
 }
 
 function poll() {
