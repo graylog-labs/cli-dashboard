@@ -13,7 +13,7 @@ by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 
 ## Installation
 
-Install the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) installed.
+Install the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) > 4.0 installed.
 Protip: It's in [homebrew](http://brew.sh) if you are on OSX.)
 
     $ npm install graylog-cli-dashboard -g
@@ -24,8 +24,8 @@ View the options:
     Usage: graylog-dashboard.js <command> [options]
 
     Options:
-      --stream-id       Graylog Stream ID
-      --host            Full Graylog REST API URL
+      --stream-title    Graylog Stream Title
+      --server-url      Full Graylog REST API URL
       --poll-interval   How often (in ms) to poll the Graylog server [default: 1000]
       --username        Graylog username
       --password        Graylog password
@@ -35,7 +35,7 @@ View the options:
 
 Full example:
 
-    $ graylog-dashboard --stream-id 549d7f9fbee84e568d181655 --host http://graylog.example.org:12900
+    $ graylog-dashboard --stream-title "Production Webservers" --host http://graylog.example.org:12900
 
 Make sure to run this with a recent version (>= 4) of node.js.
 
@@ -47,10 +47,11 @@ The default is `~/.graylog_dashboard`. For example:
     username: lennart
     password: sEcReT
 
+If you do not provide this file, and do not provide required data via command options, you will be prompted.
+
 #### Specifying a Stream
 
-A stream ID is no longer required on startup. You can specify one if you like, or choose one from the list
-on the right side of the screen.
+Choose one from the list on the right side of the screen, or specify a `--stream-title` in the command.
 
 #### If the graylog-dashboard executable cannot be found
 
@@ -61,17 +62,21 @@ NPM in the first place but the output of `npm install` should show you where it 
     # In this OSX example graylog-dashboard has been linked to the graylog-dashboard.js file in /usr/local/share/npm/...
     # Execute /usr/local/share/npm/bin/graylog-dashboard to try it out
 
-## The Dashboard in the Wild
+#### Bugs
+
+* If you have been prompted for options, the arrow up/down keys might skip a stream. You can work around this by
+using the mouse. It appears to be an incompatibility between blessed & any prompt library.
+
+### The Dashboard in the Wild
 
 Because this stuff looks like it is from space we suspect that people like to show it. **Send us a photo of your dashboard running somewhere**
 and we are more than happy to publish it here. **Bonus points for messy desks or interesting stuff in the background.**
 
-## Working with NPM
+### Working with NPM
 
 This is a few helpful notes for all of us who do not regularly work with the node/NPM ecosystem and can't remember how to do stuff.
 
 #### Bumping and releasing a new version
 
-    $ npm version [<newversion> | major | minor | patch]
-    $ git push origin master && git push --tags
-    $ npm publish
+    $ make version [major | minor | patch]
+    $ make publish
