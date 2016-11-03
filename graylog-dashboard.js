@@ -71,6 +71,12 @@ function getOptions() {
         {name: k, message: `Please input ${k}:`, type: k === 'password' ? 'password' : 'input'}
       ));
 
+      // Inquirer uses core `readline`. When activated, it automatically emits `line` and `keypress` events.
+      // Built-in NodeJS `readline` uses `stream[Symbol('keypress-decoder')]` to mark this, but blessed
+      // uses its own check. If both are running, we'll get double keypress events which makes working
+      // the stream list very difficult.
+      process.stdin._keypressDecoder = true;
+
       const prompt = inquirer.createPromptModule();
       return prompt(questions)
       .then(function(result) {

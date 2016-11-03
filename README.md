@@ -62,11 +62,6 @@ NPM in the first place but the output of `npm install` should show you where it 
     # In this OSX example graylog-dashboard has been linked to the graylog-dashboard.js file in /usr/local/share/npm/...
     # Execute /usr/local/share/npm/bin/graylog-dashboard to try it out
 
-#### Bugs
-
-* If you have been prompted for options, the arrow up/down keys might skip a stream. You can work around this by
-using the mouse. It appears to be an incompatibility between blessed & any prompt library.
-
 ### The Dashboard in the Wild
 
 Because this stuff looks like it is from space we suspect that people like to show it. **Send us a photo of your dashboard running somewhere**
