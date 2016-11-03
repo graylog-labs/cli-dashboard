@@ -6,6 +6,9 @@
     "name": "Lennart Koopmann",
     "email": "lennart@torch.sh"
   },
+  "engines": {
+    "node": ">=4.0"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:Graylog2/cli-dashboard.git"
@@ -24,9 +27,9 @@
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.5.5",
     "bluebird": "^3.4.6",
+    "inquirer": "^1.2.2",
     "js-yaml": "^3.2.5",
     "moment": "^2.9.0",
-    "prompt": "^1.0.0",
     "request": "^2.76.0",
     "yargs": "^6.3.0"
   },

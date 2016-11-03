@@ -24,7 +24,7 @@ const ui = require('./lib/screen');
 const handlers = require('./lib/handlers');
 const fs = require('fs');
 const yaml = require('js-yaml');
-const prompt = require('prompt');
+const inquirer = require('inquirer');
 const yargs = require('yargs')
   .usage('Usage: $0 <command> [options]')
   .describe('stream-title', 'Graylog Stream Title')
@@ -67,20 +67,14 @@ function getOptions() {
 
     // Prompt user for missing options.
     if (shouldPrompt.length) {
-      prompt.start();
-      const promptOpts = shouldPrompt.map((k) => {
-        const out = {name: k};
-        // Don't print passwords
-        if (k === 'password') out.hidden = true;
-        return out;
-      });
+      const questions = shouldPrompt.map((k) => (
+        {name: k, message: `Please input ${k}:`, type: k === 'password' ? 'password' : 'input'}
+      ));
 
-      return new Promise((resolve, reject) => {
-        prompt.get(promptOpts, function(err, result) {
-          if (err) return reject(err);
-          Object.assign(config, result);
-          resolve();
-        });
+      const prompt = inquirer.createPromptModule();
+      return prompt(questions)
+      .then(function(result) {
+        Object.assign(config, result);
       });
     }
   })
@@ -133,4 +127,4 @@ getOptions()
 .tap(storeStreams)
 .then(handlers.updateStreamsList)
 .then(poll)
-.catch((e) => { ui.screen.destroy(); console.error(e); process.exit(1); });
+.catch((e) => { ui.screen && ui.screen.destroy(); console.error(e); process.exit(1); });
