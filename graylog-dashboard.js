@@ -24,10 +24,11 @@ const ui = require('./lib/screen');
 const handlers = require('./lib/handlers');
 const fs = require('fs');
 const yaml = require('js-yaml');
+const prompt = require('prompt');
 const yargs = require('yargs')
   .usage('Usage: $0 <command> [options]')
-  .describe('stream-id', 'Graylog Stream ID')
-  .describe('host', 'Full Graylog REST API URL')
+  .describe('stream-title', 'Graylog Stream Title')
+  .describe('server-url', 'Full Graylog REST API URL')
   .describe('poll-interval', 'How often (in ms) to poll the Graylog server')
   .default('poll-interval', 1000)
   .describe('username', 'Graylog username')
@@ -35,72 +36,100 @@ const yargs = require('yargs')
   .describe('cred-file-path', 'Path to an optional credentials file')
   .default('cred-file-path', `${process.env.HOME}/.graylog_dashboard`)
   .help();
-const {argv} = yargs;
 
-// Read user credentials.
-let fileConfig = {};
-const {'cred-file-path': credFilePath} = argv;
-try {
-  fileConfig = yaml.safeLoad(fs.readFileSync(argv.credFilePath, 'utf8'));
-} catch (err) {
-  // Ignore, maybe everything was defined in argv
+// Will contain:
+// username, password, host, streamID, pollInterval, credFilePath
+let config;
+
+function getOptions() {
+  return Promise.try(function getOptionInput() {
+    const {argv} = yargs;
+
+    // Read user credentials.
+    let fileConfig = {};
+    try {
+      fileConfig = yaml.safeLoad(fs.readFileSync(argv['cred-file-path'], 'utf8'));
+    } catch (err) {
+      // Ignore, maybe everything was defined in argv
+    }
+
+    // Remove falsy values from argv to clean up merge.
+    Object.keys(argv).forEach((k) => {
+      if (!argv[k]) delete argv[k];
+    });
+    // Merge argv & file config.
+    config = Object.assign({}, fileConfig, argv);
+    config.serverURL = argv['server-url'] || config.serverURL; // casing
+  })
+  .then(function checkMissingOptions() {
+    // Check mandatory config.
+    const shouldPrompt = ['username', 'password', 'serverURL'].filter((k) => !config[k]);
+
+    // Prompt user for missing options.
+    if (shouldPrompt.length) {
+      prompt.start();
+      const promptOpts = shouldPrompt.map((k) => {
+        const out = {name: k};
+        // Don't print passwords
+        if (k === 'password') out.hidden = true;
+        return out;
+      });
+
+      return new Promise((resolve, reject) => {
+        prompt.get(promptOpts, function(err, result) {
+          if (err) return reject(err);
+          Object.assign(config, result);
+          resolve();
+        });
+      });
+    }
+  })
+  .then(function coerceOptions() {
+    // Make sure we have a protocol (default: https)
+    if (config.serverURL.slice(0, 4) !== 'http') config.serverURL = 'https://' + config.serverURL;
+    // Make sure we have a port (default REST API port is 12900)
+    if (!/:\d+$/.test(config.serverURL)) config.serverURL += ':12900';
+    // Make sure config.serverURL has a trailing slash. (computers.)
+    if (config.serverURL[config.serverURL.length - 1] !== '/') config.serverURL += '/';
+    return config;
+  });
 }
-
-// Remove falsy values from argv to clean up merge.
-Object.keys(argv).forEach((k) => {
-  if (!argv[k]) delete argv[k];
-});
-// Merge argv & file config.
-const config = Object.assign({}, fileConfig, argv);
-
-// Check mandatory config.
-['username', 'password', 'host'].forEach((k) => {
-  if (!config[k]) {
-    console.error(`Error: No ${k} defined in ${credFilePath} or arguments!`);
-    yargs.showHelp();
-    process.exit(1);
-  }
-});
-
-// eslint-disable-next-line prefer-const
-let {username, password, 'stream-id': streamID, host: serverURL, 'poll-interval': pollInterval} = config;
-
-// Make sure we have a protocol (default: https)
-if (serverURL.slice(0, 4) !== 'http') serverURL = 'https://' + serverURL;
-// Make sure we have a port (default REST API port is 12900)
-if (!/:\d+$/.test(serverURL)) serverURL += ':12900';
-// Make sure serverURL has a trailing slash. (computers.)
-if (serverURL[serverURL.length - 1] !== '/') serverURL += '/';
 
 let streams; // filled in after streams runs
 function storeStreams(_streams) {
   streams = _streams;
-  if (!streamID) streamID = streams[0].id;
-  ui.flush(streams.find((s) => s.id === streamID).title);
+  if (!config.streamTitle) {
+    // Could happen on startup
+    config.streamTitle = streams[0].title;
+  }
+  const thisStream = streams.find((s) => s.title === config.streamTitle);
+  config.streamID = thisStream.id;
+  ui.flush(thisStream.title);
 }
 
 function onStreamChange(blessedEl) {
   const streamTitle = blessedEl.content;
-  streamID = streams.find((s) => s.title === streamTitle).id;
+  config.streamTitle = streamTitle;
+  config.streamID = streams.find((s) => s.title === streamTitle).id;
   ui.flush(streamTitle);
 }
 
 function poll() {
   return Promise.all([
-    graylog.lastMessagesOfStream({serverURL, streamID, username, password}).then(handlers.updateMessagesList),
-    graylog.streamThroughput({serverURL, streamID, username, password}).then(handlers.updateStreamThroughput),
-    graylog.totalThroughput({serverURL, username, password}).then(handlers.updateTotalThroughputLine),
-    graylog.streamAlerts({serverURL, streamID, username, password}).then(handlers.renderAlerts),
+    graylog.lastMessagesOfStream(config).then(handlers.updateMessagesList),
+    graylog.streamThroughput(config).then(handlers.updateStreamThroughput),
+    graylog.totalThroughput(config).then(handlers.updateTotalThroughputLine),
+    graylog.streamAlerts(config).then(handlers.renderAlerts),
   ])
   .then(() => ui.render()) // batch up renders
-  .delay(pollInterval)
-  .then(() => poll(streamID));
+  .delay(config.pollInterval)
+  .then(() => poll(config.streamID));
 }
 
 // Entry
-ui.create({onStreamChange});
-// Get streams first
-graylog.streams({serverURL, username, password})
+getOptions()
+.then(() => ui.create({onStreamChange}))
+.then(() => graylog.streams(config))
 .tap(storeStreams)
 .then(handlers.updateStreamsList)
 .then(poll)
