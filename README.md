@@ -20,7 +20,7 @@ Protip: It's in [homebrew](http://brew.sh) if you are on OSX.)
 
 View the options:
 
-    $ graylog-cli-dashboard --help
+    $ graylog-dashboard --help
     Usage: graylog-dashboard.js <command> [options]
 
     Options:
@@ -35,7 +35,7 @@ View the options:
 
 Full example:
 
-    $ graylog-dashboard --stream-title "Production Webservers" --host http://graylog.example.org:12900
+    $ graylog-dashboard --stream-title "Production Webservers" --server-url http://graylog.example.org:12900
 
 Make sure to run this with a recent version (>= 4) of node.js.
 
