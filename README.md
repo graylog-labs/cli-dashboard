@@ -13,7 +13,7 @@ by [Yaron Naveh](https://twitter.com/YaronNaveh). Great job on that!
 
 ## Installation
 
-Install the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) > 4.0 installed.
+Install the dashboard: (You'll have to have [node.js](http://nodejs.org/download/) > 6.0 installed.
 Protip: It's in [homebrew](http://brew.sh) if you are on OSX.)
 
     $ npm install graylog-cli-dashboard -g
