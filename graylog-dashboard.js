@@ -88,7 +88,8 @@ function getOptions() {
     // Make sure we have a protocol (default: https)
     if (config.serverURL.slice(0, 4) !== 'http') config.serverURL = 'https://' + config.serverURL;
     // Make sure we have a port (default REST API port is 12900)
-    if (!/:\d+$/.test(config.serverURL)) config.serverURL += ':12900';
+    // this only works for urls that do not end in /api or specify a port.
+    if (!/:\d+/.test(config.serverURL)) config.serverURL += ':12900';
     // Make sure config.serverURL has a trailing slash. (computers.)
     if (config.serverURL[config.serverURL.length - 1] !== '/') config.serverURL += '/';
     return config;
