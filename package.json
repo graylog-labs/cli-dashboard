@@ -1,6 +1,6 @@
 {
   "name": "graylog-cli-dashboard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI dashboard for Graylog because ain't nobody got time for browser windows.",
   "homepage": "http://www.graylog.org/",
   "author": {
