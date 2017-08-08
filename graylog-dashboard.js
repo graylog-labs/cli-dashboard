@@ -21,6 +21,7 @@
 const Promise = require('bluebird');
 const graylog = require('./lib/graylog-api');
 const ui = require('./lib/screen');
+const url = require('url');
 const handlers = require('./lib/handlers');
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -28,11 +29,19 @@ const inquirer = require('inquirer');
 const yargs = require('yargs')
   .usage('Usage: $0 <command> [options]')
   .describe('stream-title', 'Graylog Stream Title')
-  .describe('server-url', 'Full Graylog REST API URL')
+  .group(['server-url', 'api-host', 'api-port', 'api-path', 'api-protocol', 'username', 'password'], 'Rest API Options:')
+  .describe('server-url', '(Deprecated; use api-host, path, port) Full Graylog API URL')
+  .describe('api-host', 'Graylog API Hostname')
+  .describe('api-port', 'Graylog API Port')
+  .default('api-port', 9000)
+  .describe('api-path', 'Graylog API Path')
+  .default('api-path', '/api/')
+  .describe('api-protocol', 'Graylog API Protocol')
+  .default('api-protocol', 'https')
   .describe('poll-interval', 'How often (in ms) to poll the Graylog server')
   .default('poll-interval', 1000)
-  .describe('username', 'Graylog username')
-  .describe('password', 'Graylog password')
+  .describe('username', 'Graylog API Username')
+  .describe('password', 'Graylog API Password')
   .describe('cred-file-path', 'Path to an optional credentials file')
   .default('cred-file-path', `${process.env.HOME}/.graylog_dashboard`)
   .describe('insecure', 'If set, will not verify leaf certificates.')
@@ -66,7 +75,7 @@ function getOptions() {
   })
   .then(function checkMissingOptions() {
     // Check mandatory config.
-    const shouldPrompt = ['username', 'password', 'serverURL'].filter((k) => !config[k]);
+    const shouldPrompt = ['username', 'password'].filter((k) => !config[k]);
 
     // Prompt user for missing options.
     if (shouldPrompt.length) {
@@ -88,12 +97,22 @@ function getOptions() {
     }
   })
   .then(function coerceOptions() {
-    // Make sure we have a protocol (default: https)
-    if (config.serverURL.slice(0, 4) !== 'http') config.serverURL = 'https://' + config.serverURL;
-    // Make sure we have a port (default REST API port is 12900)
-    if (!/:\d+$/.test(config.serverURL)) config.serverURL += ':12900';
-    // Make sure config.serverURL has a trailing slash. (computers.)
-    if (config.serverURL[config.serverURL.length - 1] !== '/') config.serverURL += '/';
+    // DEPRECATED: serverURL
+    if (config.serverURL) {
+      // Make sure we have a protocol (default: https)
+      if (!/^\w+:\/\//.test(config.serverURL)) config.serverURL = 'https://' + config.serverURL;
+
+      // Make sure we have a port (default REST API port is 9000)
+      const parts = url.parse(config.serverURL);
+      if (!parts.port) parts.port = 9000;
+      if (!parts.path) parts.path = '/api/';
+      parts.href = parts.host = null; // otherwise url won't change when re-formatting
+      config.serverURL = url.format(parts);
+    } else if (config['api-host']) {
+      config.serverURL = `${config['api-protocol']}://${config['api-host']}:${config['api-port']}${config['api-path']}`;
+    } else {
+      throw new Error('Either "server-url" or "api-host" must be defined!');
+    }
     return config;
   });
 }

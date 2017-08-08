@@ -23,19 +23,26 @@ View the options:
     $ graylog-dashboard --help
     Usage: graylog-dashboard.js <command> [options]
 
+    Rest API Options:
+      --server-url    (Deprecated; use api-host, path, port) Full Graylog API URL
+      --api-host      Graylog API Hostname
+      --api-port      Graylog API Port                               [default: 9000]
+      --api-path      Graylog API Path                            [default: "/api/"]
+      --api-protocol  Graylog API Protocol                        [default: "https"]
+      --username      Graylog API Username
+      --password      Graylog API Password
+
     Options:
       --stream-title    Graylog Stream Title
-      --server-url      Full Graylog REST API URL
       --poll-interval   How often (in ms) to poll the Graylog server [default: 1000]
-      --username        Graylog username
-      --password        Graylog password
       --cred-file-path  Path to an optional credentials file
-                                   [default: "/Users/user/.graylog_dashboard"]
+                                   [default: "/Users/samuelreed/.graylog_dashboard"]
+      --insecure        If set, will not verify leaf certificates.
       --help            Show help                                          [boolean]
 
 Full example:
 
-    $ graylog-dashboard --stream-title "Production Webservers" --server-url http://graylog.example.org:12900
+    $ graylog-dashboard --stream-title "Production Webservers" --api-host graylog.example.org
 
 Make sure to run this with a recent version (>= 4) of node.js.
 
@@ -46,6 +53,9 @@ The default is `~/.graylog_dashboard`. For example:
 
     username: lennart
     password: sEcReT
+    api-host: graylog.foo.com
+    api-path: /
+    api-port: 12900
 
 If you do not provide this file, and do not provide required data via command options, you will be prompted.
 
