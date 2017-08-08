@@ -35,6 +35,7 @@ const yargs = require('yargs')
   .describe('password', 'Graylog password')
   .describe('cred-file-path', 'Path to an optional credentials file')
   .default('cred-file-path', `${process.env.HOME}/.graylog_dashboard`)
+  .describe('insecure', 'If set, will not verify leaf certificates.')
   .help();
 
 // Will contain:
@@ -60,6 +61,8 @@ function getOptions() {
     // Merge argv & file config.
     config = Object.assign({}, fileConfig, argv);
     config.serverURL = argv['server-url'] || config.serverURL; // casing
+
+    if (config.insecure) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   })
   .then(function checkMissingOptions() {
     // Check mandatory config.
