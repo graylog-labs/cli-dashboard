@@ -150,6 +150,7 @@ function poll() {
 
 // Entry
 getOptions()
+.then(graylog.getMetadata)
 .then(() => ui.create({onStreamChange}))
 .then(() => graylog.streams(config))
 .tap(storeStreams)
