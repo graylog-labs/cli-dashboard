@@ -68,8 +68,7 @@ function getOptions() {
       if (!argv[k]) delete argv[k];
     });
     // Merge argv & file config.
-    config = Object.assign({}, fileConfig, argv);
-    config.serverURL = argv['server-url'] || config.serverURL; // casing
+    config = Object.assign({}, argv, fileConfig);
 
     if (config.insecure) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   })
@@ -98,12 +97,13 @@ function getOptions() {
   })
   .then(function coerceOptions() {
     // DEPRECATED: serverURL
-    if (config.serverURL) {
+    let fullURL = config.serverURL || config['server-url'];
+    if (fullURL) {
       // Make sure we have a protocol (default: https)
-      if (!/^\w+:\/\//.test(config.serverURL)) config.serverURL = 'https://' + config.serverURL;
+      if (!/^\w+:\/\//.test(fullURL)) fullURL = 'https://' + fullURL;
 
       // Make sure we have a port (default REST API port is 9000)
-      const parts = url.parse(config.serverURL);
+      const parts = url.parse(fullURL);
       if (!parts.port) parts.port = 9000;
       if (!parts.path) parts.path = '/api/';
       parts.href = parts.host = null; // otherwise url won't change when re-formatting
