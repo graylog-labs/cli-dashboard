@@ -58,7 +58,7 @@ const yargs = require('yargs')
   .describe('range', 'Range in seconds')
   .default('range','86400')
   .describe('batch', 'events per request')
-  .default('batch','50')
+  .default('batch', Infinity)
   .describe('format','output format (ansi,csv,json)')
   .default('format','ansi')
   .describe('cred-file-path', 'Path to an optional credentials file')
@@ -79,8 +79,7 @@ function updateMessagesList(messages) {
 
   let msg;
   while(items.length) {
-    let values = [], line;
-    msg = items.shift()
+    msg = items.shift();
     // skip if _id already displayed
     if (config.id_blacklist[ msg['_id'] ]) { continue; }
     fields.forEach(function(el) {
@@ -98,10 +97,10 @@ function updateMessagesList(messages) {
     cursor.write('\n');
 
     // blacklist displayed message-ids in order to prevent successive
-    // results from the same second from being re-displayed 
+    // results from the same second from being re-displayed
     config.id_blacklist[ msg['_id'] ] = msg.timestamp;
   }
-  
+
   // save last msg id and last timestamp
   if (msg) {
     config.last_id = msg['_id'];
@@ -163,7 +162,7 @@ function getOptions() {
   })
   .then(function coerceOptions() {
     // inital value
-    config.id_blacklist = {}
+    config.id_blacklist = {};
 
     // DEPRECATED: serverURL
     let fullURL = config.serverURL || config['server-url'];
@@ -198,9 +197,8 @@ function storeStreams(_streams) {
 }
 
 function poll() {
-  return Promise.all([
-    graylog.lastMessagesOfStream(config).then(updateMessagesList),
-  ])
+  return graylog.lastMessagesOfStream(config)
+  .then(updateMessagesList)
   .delay(config.pollInterval)
   .then(() => poll(config.streamID));
 }
