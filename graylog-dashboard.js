@@ -29,19 +29,33 @@ const inquirer = require('inquirer');
 const yargs = require('yargs')
   .usage('Usage: $0 <command> [options]')
   .describe('stream-title', 'Graylog Stream Title')
+  .alias('S','stream-title')
   .group(['server-url', 'api-host', 'api-port', 'api-path', 'api-protocol', 'username', 'password'], 'Rest API Options:')
   .describe('server-url', '(Deprecated; use api-host, path, port) Full Graylog API URL')
   .describe('api-host', 'Graylog API Hostname')
+  .alias('H','api-host')
   .describe('api-port', 'Graylog API Port')
   .default('api-port', 9000)
   .describe('api-path', 'Graylog API Path')
   .default('api-path', '/api/')
   .describe('api-protocol', 'Graylog API Protocol')
+  .alias('P','api-protocol')
   .default('api-protocol', 'https')
   .describe('poll-interval', 'How often (in ms) to poll the Graylog server')
   .default('poll-interval', 1000)
   .describe('username', 'Graylog API Username')
+  .alias('u','username')
   .describe('password', 'Graylog API Password')
+  .alias('p','password')
+  .describe('stream-sort', 'Stream Sorting')
+  .default('stream-sort','desc')
+  .describe('query', 'Query')
+  .default('query','*')
+  .alias('Q','query')
+  .describe('fields', 'Fields')
+  .default('fields','timestamp,message')
+  .describe('range', 'Range in seconds')
+  .default('range','86400')
   .describe('cred-file-path', 'Path to an optional credentials file')
   .default('cred-file-path', `${process.env.HOME}/.graylog_dashboard`)
   .describe('insecure', 'If set, will not verify leaf certificates.')
@@ -96,6 +110,7 @@ function getOptions() {
     }
   })
   .then(function coerceOptions() {
+    config.streamSort = config['stream-sort'] || "desc";
     // DEPRECATED: serverURL
     let fullURL = config.serverURL || config['server-url'];
     if (fullURL) {
