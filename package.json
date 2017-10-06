@@ -24,6 +24,7 @@
     }
   ],
   "dependencies": {
+    "ansi": "^0.3.1",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.5.5",
     "bluebird": "^3.4.6",
@@ -35,7 +36,8 @@
   },
   "preferGlobal": "true",
   "bin": {
-    "graylog-dashboard": "graylog-dashboard.js"
+    "graylog-dashboard": "graylog-dashboard.js",
+    "tailgl": "tailgl.js"
   },
   "devDependencies": {
     "eslint": "^3.9.0",
