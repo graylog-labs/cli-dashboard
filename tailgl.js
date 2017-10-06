@@ -20,9 +20,10 @@
 
 const Promise = require('bluebird');
 const graylog = require('./lib/graylog-api');
-const ui = require('./lib/screen');
+const moment = require('moment');
+const ansi = require('ansi');
+const cursor = ansi(process.stdout);
 const url = require('url');
-const handlers = require('./lib/handlers');
 const fs = require('fs');
 const yaml = require('js-yaml');
 const inquirer = require('inquirer');
@@ -53,11 +54,13 @@ const yargs = require('yargs')
   .default('query','*')
   .alias('Q','query')
   .describe('fields', 'Fields')
-  .default('fields','timestamp,message')
+  .default('fields','timestamp,source,message')
   .describe('range', 'Range in seconds')
   .default('range','86400')
   .describe('batch', 'events per request')
-  .default('batch','50')
+  .default('batch', Infinity)
+  .describe('format','output format (ansi,csv,json)')
+  .default('format','ansi')
   .describe('cred-file-path', 'Path to an optional credentials file')
   .default('cred-file-path', `${process.env.HOME}/.graylog_dashboard`)
   .describe('insecure', 'If set, will not verify leaf certificates.')
@@ -66,6 +69,52 @@ const yargs = require('yargs')
 // Will contain:
 // username, password, host, streamID, pollInterval, credFilePath
 let config;
+
+function updateMessagesList(messages) {
+
+  const fields = config.fields.split(',');
+
+  const items = messages
+  .sort((message1, message2) => new Date(message1.timestamp) - new Date(message2.timestamp));
+
+  let msg;
+  while(items.length) {
+    msg = items.shift();
+    // skip if _id already displayed
+    if (config.id_blacklist[ msg['_id'] ]) { continue; }
+    fields.forEach(function(el) {
+      switch(el){
+        case 'timestamp':
+          cursor.grey().write( moment(msg.timestamp).format('YYYY-MM-DD HH:mm:ss') );
+          break;
+        case 'source':
+          cursor.yellow().write( ' '+ msg.source );
+          break;
+        default:
+          cursor.reset().write( ' '+ msg[el] );
+      }
+    });
+    cursor.write('\n');
+
+    // blacklist displayed message-ids in order to prevent successive
+    // results from the same second from being re-displayed
+    config.id_blacklist[ msg['_id'] ] = msg.timestamp;
+  }
+
+  // save last msg id and last timestamp
+  if (msg) {
+    config.last_id = msg['_id'];
+    config.last_timestamp = msg.timestamp;
+  }
+
+  // clean id_blacklist
+  for (var id in config.id_blacklist) {
+    if ( new Date(config.id_blacklist[id]) < new Date(config.last_timestamp) ) {
+      delete config.id_blacklist[id];
+    }
+  }
+}
+
 
 function getOptions() {
   return Promise.try(function getOptionInput() {
@@ -112,7 +161,9 @@ function getOptions() {
     }
   })
   .then(function coerceOptions() {
-    config.sort = config['sort'] || "timestamp:desc";
+    // inital value
+    config.id_blacklist = {};
+
     // DEPRECATED: serverURL
     let fullURL = config.serverURL || config['server-url'];
     if (fullURL) {
@@ -143,24 +194,11 @@ function storeStreams(_streams) {
   }
   const thisStream = streams.find((s) => s.title === config.streamTitle);
   config.streamID = thisStream.id;
-  ui.flush(thisStream.title, streams);
-}
-
-function onStreamChange(blessedEl) {
-  const streamTitle = blessedEl.content;
-  config.streamTitle = streamTitle;
-  config.streamID = streams.find((s) => s.title === streamTitle).id;
-  ui.flush(streamTitle, streams);
 }
 
 function poll() {
-  return Promise.all([
-    graylog.lastMessagesOfStream(config).then(handlers.updateMessagesList),
-    graylog.streamThroughput(config).then(handlers.updateStreamThroughput),
-    graylog.totalThroughput(config).then(handlers.updateTotalThroughputLine),
-    graylog.streamAlerts(config).then(handlers.renderAlerts),
-  ])
-  .then(() => ui.render()) // batch up renders
+  return graylog.lastMessagesOfStream(config)
+  .then(updateMessagesList)
   .delay(config.pollInterval)
   .then(() => poll(config.streamID));
 }
@@ -168,9 +206,6 @@ function poll() {
 // Entry
 getOptions()
 .then(graylog.getMetadata)
-.then(() => ui.create({onStreamChange}))
 .then(() => graylog.streams(config))
 .tap(storeStreams)
-.then(handlers.updateStreamsList)
-.then(poll)
-.catch((e) => { ui.screen && ui.screen.destroy(); console.error(e); process.exit(1); });
+.then(poll);
