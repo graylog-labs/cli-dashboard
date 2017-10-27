@@ -55,8 +55,8 @@ const yargs = require('yargs')
   .alias('Q','query')
   .describe('fields', 'Fields')
   .default('fields','timestamp,source,message')
-  .describe('range', 'Range in seconds')
-  .default('range','86400')
+  .describe('range', 'Range in seconds. Must be larger than poll interval.')
+  .default('range','5') // intentional; just long enough to tail the page
   .describe('batch', 'events per request')
   .default('batch', Infinity)
   .describe('format','output format (ansi,csv,json)')
@@ -137,29 +137,6 @@ function getOptions() {
 
     if (config.insecure) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   })
-  .then(function checkMissingOptions() {
-    // Check mandatory config.
-    const shouldPrompt = ['username', 'password'].filter((k) => !config[k]);
-
-    // Prompt user for missing options.
-    if (shouldPrompt.length) {
-      const questions = shouldPrompt.map((k) => (
-        {name: k, message: `Please input ${k}:`, type: k === 'password' ? 'password' : 'input'}
-      ));
-
-      // Inquirer uses core `readline`. When activated, it automatically emits `line` and `keypress` events.
-      // Built-in NodeJS `readline` uses `stream[Symbol('keypress-decoder')]` to mark this, but blessed
-      // uses its own check. If both are running, we'll get double keypress events which makes working
-      // the stream list very difficult.
-      process.stdin._keypressDecoder = true;
-
-      const prompt = inquirer.createPromptModule();
-      return prompt(questions)
-      .then(function(result) {
-        Object.assign(config, result);
-      });
-    }
-  })
   .then(function coerceOptions() {
     // inital value
     config.id_blacklist = {};
@@ -181,8 +158,36 @@ function getOptions() {
     } else {
       throw new Error('Either "server-url" or "api-host" must be defined!');
     }
+
+    if (config.pollInterval / 1000 > (config.range - 1)) {
+      throw new Error('Poll interval must be more often than range, or messages will be missed.');
+    }
+  })
+  .then(function checkMissingOptions() {
+    // Check mandatory config.
+    const shouldPrompt = ['username', 'password'].filter((k) => !config[k]);
+
+    // Prompt user for missing options.
+    if (shouldPrompt.length) {
+      const questions = shouldPrompt.map((k) => (
+        {name: k, message: `Please input ${k}:`, type: k === 'password' ? 'password' : 'input'}
+      ));
+
+      // Inquirer uses core `readline`. When activated, it automatically emits `line` and `keypress` events.
+      // Built-in NodeJS `readline` uses `stream[Symbol('keypress-decoder')]` to mark this, but blessed
+      // uses its own check. If both are running, we'll get double keypress events which makes working
+      // the stream list very difficult.
+      process.stdin._keypressDecoder = true;
+
+      const prompt = inquirer.createPromptModule();
+      return prompt(questions)
+      .then(function(result) {
+        return Object.assign(config, result);
+      });
+    }
     return config;
   });
+
 }
 
 let streams; // filled in after streams runs
@@ -208,4 +213,5 @@ getOptions()
 .then(graylog.getMetadata)
 .then(() => graylog.streams(config))
 .tap(storeStreams)
-.then(poll);
+.then(poll)
+.catch(console.error);
